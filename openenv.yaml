@@ -1,25 +1,81 @@
-# openenv.yaml — Environment metadata manifest
-# TODO: fill in once environment is implemented
+# openenv.yaml — OpenEnv environment manifest for RuralDocEnv
 
 name: rural_doc_env
 version: 0.1.0
 description: >
-  Rural Indian Primary Health Center diagnostic simulator.
-  An LLM agent plays a doctor with limited tools and dynamic patient state.
+  Rural Indian Primary Health Centre (PHC) diagnostic simulator.
+  An LLM agent plays a doctor with limited diagnostic tools and a tight budget,
+  managing a dynamically evolving patient across multiple days.
+
+author: Deshna Dey
+repository: https://github.com/DeshnaDey/RuralDoc
+
+# ── Action space ──────────────────────────────────────────────────────────────
 action_space:
-  - order_test
-  - diagnose
-  - refer
+  - name: order_test
+    description: Order a diagnostic test (costs budget; returns info_gain)
+    fields:
+      test_name: str
+  - name: diagnose
+    description: Submit a final diagnosis to end the episode
+    fields:
+      diagnosis: str
+  - name: refer
+    description: Refer the patient to a specialist (required in some scenarios)
+
+# ── Observation keys ──────────────────────────────────────────────────────────
 observation_keys:
-  - patient_info
-  - current_symptoms
-  - current_vitals
-  - test_results
-  - available_tests
-  - time_elapsed
-  - time_budget
-  - steps_taken
-  - max_steps
-  - patient_status
-  - reward
+  - patient          # {age, gender, location}
+  - symptoms         # list[str]
+  - vitals           # {temp, bp, hr, spo2}
+  - available_tests  # list[str]
+  - status           # "stable" | "worsening" | "critical"
+  - budget_remaining # float
+  - day              # int (1-indexed)
+  - memory           # list[str] — test result notes accumulated so far
+
+# ── State keys (internal) ─────────────────────────────────────────────────────
+state_keys:
+  - current_day
+  - budget_remaining
+  - tests_ordered
+  - referred
   - done
+  - scenario_id
+  - patient_status
+
+# ── Episode parameters ────────────────────────────────────────────────────────
+episode:
+  max_steps: 20           # hard cap per episode
+  scenarios: 20           # total scenarios in scenarios_v2
+  budget_range: [8, 30]   # budget units across scenarios
+  critical_window_range: [2, 14]  # days
+
+# ── Reward structure ──────────────────────────────────────────────────────────
+reward:
+  step_penalty: -0.05
+  correct_diagnosis: +1.0
+  early_diagnosis_bonus: up to +0.5   # scaled by days remaining / window
+  early_referral: +0.2
+  late_referral: +0.1
+  duplicate_test: -0.2
+  budget_exhausted: -0.5
+  late_or_missed_referral: -1.0       # scenario-specific key
+
+# ── Server ────────────────────────────────────────────────────────────────────
+server:
+  default_port: 8000
+  protocol: http+websocket
+  docker: server/Dockerfile
+
+# ── Dependencies ──────────────────────────────────────────────────────────────
+requires:
+  python: ">=3.11"
+  packages:
+    - pydantic>=2.0
+    - fastapi>=0.110
+    - uvicorn[standard]>=0.29
+    - websockets>=12.0
+    - httpx>=0.27
+    - openai>=1.0
+    - pyyaml>=6.0
