@@ -1,0 +1,25 @@
+# openenv.yaml — Environment metadata manifest
+# TODO: fill in once environment is implemented
+
+name: rural_doc_env
+version: 0.1.0
+description: >
+  Rural Indian Primary Health Center diagnostic simulator.
+  An LLM agent plays a doctor with limited tools and dynamic patient state.
+action_space:
+  - order_test
+  - diagnose
+  - refer
+observation_keys:
+  - patient_info
+  - current_symptoms
+  - current_vitals
+  - test_results
+  - available_tests
+  - time_elapsed
+  - time_budget
+  - steps_taken
+  - max_steps
+  - patient_status
+  - reward
+  - done
