@@ -384,7 +384,8 @@ def run_episode(scenario: dict = None, verbose: bool = True) -> dict:
         budget_spent = sc["budget"] - state.budget_remaining
     finally:
         rewards_str = ",".join(f"{r:.2f}" for r in step_rewards)
-        print(f"[END] success={'true' if success else 'false'} steps={steps} rewards={rewards_str}")
+        score = max(0.0, min(1.0, sum(step_rewards) / 10.0))
+        print(f"[END] success={'true' if success else 'false'} steps={steps} score={score:.2f} rewards={rewards_str}")
 
     summary = {
         "scenario_id":   sc["id"],
