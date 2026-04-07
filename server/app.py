@@ -79,6 +79,18 @@ async def root():
     }
 
 
+@app.post("/reset")
+async def http_reset(body: dict = {}):
+    from rural_doc_env.scenarios import scenarios_v2
+    env = MedicalDiagnosisEnvironment()
+    scenario = None
+    scenario_id = body.get("scenario_id") if body else None
+    if scenario_id:
+        scenario = next((s for s in scenarios_v2 if s["id"] == scenario_id), None)
+    obs = env.reset(scenario=scenario)
+    return obs.model_dump()
+
+
 @app.get("/health")
 async def health():
     return {"status": "ok", "env": "RuralDocEnv"}
@@ -95,3 +107,11 @@ async def info():
             "status", "budget_remaining", "day", "memory"
         ],
     }
+
+
+def main():
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=7860)
+
+if __name__ == "__main__":
+    main()
