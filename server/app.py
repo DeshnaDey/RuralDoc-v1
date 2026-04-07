@@ -64,6 +64,21 @@ async def websocket_endpoint(websocket: WebSocket):
         pass
 
 
+@app.get("/")
+async def root():
+    return {
+        "name": "RuralDocEnv",
+        "status": "running",
+        "description": "Rural Indian PHC clinical reasoning simulator",
+        "endpoints": {
+            "health": "/health",
+            "info": "/info",
+            "websocket": "/ws"
+        },
+        "huggingface": "https://huggingface.co/spaces/Kiddy007/RuralDocEnv"
+    }
+
+
 @app.get("/health")
 async def health():
     return {"status": "ok", "env": "RuralDocEnv"}
