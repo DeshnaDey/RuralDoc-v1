@@ -1,0 +1,54 @@
+name: RuralDocEnv
+version: "0.1.0"
+description: >
+  Rural Indian Primary Health Center simulator. An AI agent plays a doctor
+  facing patients with India-specific conditions (dengue, malaria, typhoid, TB,
+  anemia, snakebite, heat stroke, gestational diabetes, and more). Only basic
+  diagnostic tools are available. Patient state evolves dynamically — the agent
+  must diagnose accurately and act fast.
+
+entrypoint: server.app:app
+server:
+  host: 0.0.0.0
+  port: 8000
+  protocol: websocket
+
+action_space:
+  type: discrete
+  actions:
+    - order_test    # order a diagnostic test by name
+    - diagnose      # state the final diagnosis (ends episode)
+    - refer         # refer patient to district hospital (ends episode)
+
+observation_space:
+  fields:
+    patient:          "dict — age, gender, location"
+    symptoms:         "list[str] — current presenting symptoms"
+    vitals:           "dict — temp, bp, hr, spo2"
+    available_tests:  "list[str] — tests not yet ordered"
+    status:           "str — stable | worsening | critical"
+    budget_remaining: "float — budget units left"
+    day:              "int — current episode day (1-indexed)"
+    memory:           "list[str] — test result memory notes"
+
+reward_range: [-2.0, 2.0]
+
+tasks:
+  - id: easy
+    description: "7 straightforward cases with fast critical windows (malaria, dengue, heat stroke)"
+  - id: medium
+    description: "7 moderate cases requiring multi-step investigation (typhoid, anemia, UTI)"
+  - id: hard
+    description: "6 complex cases with long critical windows and referral requirements (TB, leptospirosis, snakebite)"
+
+baseline:
+  agent: LLM (GPT-4o-mini)
+  script: rural_doc_env/inference.py
+  avg_reward: null   # to be populated after benchmark run
+
+tags:
+  - healthcare
+  - clinical-reasoning
+  - india
+  - resource-constrained
+  - diagnosis
