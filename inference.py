@@ -11,8 +11,10 @@ Usage:
 """
 
 import json
-import argparse
 import sys
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+import argparse
 import os
 import openai
 
