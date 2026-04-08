@@ -393,7 +393,7 @@ def run_episode(scenario: dict = None, verbose: bool = True) -> dict:
         budget_spent = sc["budget"] - state.budget_remaining
     finally:
         rewards_str = ",".join(f"{r:.2f}" for r in step_rewards)
-        score = max(0.0, min(1.0, sum(step_rewards) / 10.0))
+        score = max(0.001, min(0.999, sum(step_rewards) / 10.0))
         print(f"[END] success={'true' if success else 'false'} steps={steps} score={score:.2f} rewards={rewards_str}")
 
     summary = {
@@ -481,14 +481,20 @@ def main():
     if args.all:
         run_all(verbose=not args.quiet)
     else:
-        sc = None
         if args.scenario:
             sc = next((s for s in scenarios_v2 if s["id"] == args.scenario), None)
             if sc is None:
                 print(f"[ERROR] Unknown scenario ID: {args.scenario}")
                 print(f"  Valid IDs: {[s['id'] for s in scenarios_v2]}")
                 sys.exit(1)
-        run_episode(scenario=sc, verbose=not args.quiet)
+            run_episode(scenario=sc, verbose=not args.quiet)
+        else:
+            for scenario_id in ("case_07", "case_10", "case_01"):
+                sc = next((s for s in scenarios_v2 if s["id"] == scenario_id), None)
+                if sc is None:
+                    print(f"[ERROR] Unknown scenario ID: {scenario_id}")
+                    sys.exit(1)
+                run_episode(scenario=sc, verbose=not args.quiet)
 
 
 if __name__ == "__main__":
