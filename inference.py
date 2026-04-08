@@ -394,7 +394,7 @@ def run_episode(scenario: dict = None, verbose: bool = True) -> dict:
     finally:
         rewards_str = ",".join(f"{r:.2f}" for r in step_rewards)
         score = max(0.001, min(0.999, sum(step_rewards) / 10.0))
-        print(f"[END] success={'true' if success else 'false'} steps={steps} score={score:.2f} rewards={rewards_str}")
+        print(f"[END] success={'true' if success else 'false'} steps={steps} score={score:.3f} rewards={rewards_str}")
 
     summary = {
         "scenario_id":   sc["id"],
