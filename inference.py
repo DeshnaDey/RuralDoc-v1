@@ -344,7 +344,16 @@ def run_episode(scenario: dict = None, verbose: bool = True) -> dict:
                 print(f"\n{user_text}")
 
             # Call LLM
-            raw_response = call_llm(SYSTEM_PROMPT, conversation)
+            try:
+                raw_response = call_llm(SYSTEM_PROMPT, conversation)
+            except Exception as e:
+                error_msg = str(e)
+                action = {"type": "diagnose", "diagnosis": "unknown"}
+                step_rewards.append(-0.05)
+                steps += 1
+                print(f"[STEP] step={steps} action={json.dumps(action)} reward=-0.05 done=true error={error_msg}")
+                success = False
+                break
 
             conversation.append({"role": "assistant", "content": raw_response})
 
