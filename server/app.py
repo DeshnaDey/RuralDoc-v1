@@ -13,9 +13,13 @@ Docker:
 """
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+import asyncio
 import json
 import sys
 import os
+
+MAX_CONCURRENT_ENVS = 64
+_semaphore = asyncio.Semaphore(MAX_CONCURRENT_ENVS)
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
@@ -30,38 +34,39 @@ app = FastAPI(
 # One environment instance per connection
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
-    await websocket.accept()
-    env = MedicalDiagnosisEnvironment()
+    async with _semaphore:
+        await websocket.accept()
+        env = MedicalDiagnosisEnvironment()
 
-    try:
-        while True:
-            raw = await websocket.receive_text()
-            payload = json.loads(raw)
-            command = payload.get("command")
+        try:
+            while True:
+                raw = await websocket.receive_text()
+                payload = json.loads(raw)
+                command = payload.get("command")
 
-            if command == "reset":
-                scenario_id = payload.get("scenario_id")
-                from rural_doc_env.scenarios import scenarios_v2
-                scenario = None
-                if scenario_id:
-                    scenario = next((s for s in scenarios_v2 if s["id"] == scenario_id), None)
-                obs = env.reset(scenario=scenario)
-                await websocket.send_text(obs.model_dump_json())
+                if command == "reset":
+                    scenario_id = payload.get("scenario_id")
+                    from rural_doc_env.scenarios import scenarios_v2
+                    scenario = None
+                    if scenario_id:
+                        scenario = next((s for s in scenarios_v2 if s["id"] == scenario_id), None)
+                    obs = env.reset(scenario=scenario)
+                    await websocket.send_text(obs.model_dump_json())
 
-            elif command == "step":
-                action = payload.get("action", {})
-                result = env.step(action)
-                await websocket.send_text(result.model_dump_json())
+                elif command == "step":
+                    action = payload.get("action", {})
+                    result = env.step(action)
+                    await websocket.send_text(result.model_dump_json())
 
-            elif command == "state":
-                state = env.state()
-                await websocket.send_text(state.model_dump_json())
+                elif command == "state":
+                    state = env.state()
+                    await websocket.send_text(state.model_dump_json())
 
-            else:
-                await websocket.send_text(json.dumps({"error": f"Unknown command: {command}"}))
+                else:
+                    await websocket.send_text(json.dumps({"error": f"Unknown command: {command}"}))
 
-    except WebSocketDisconnect:
-        pass
+        except WebSocketDisconnect:
+            pass
 
 
 @app.get("/")
