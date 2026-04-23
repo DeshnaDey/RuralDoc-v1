@@ -100,6 +100,31 @@ def calculate_reward(current_state: dict, action: dict, scenario: dict) -> float
     return reward
 
 
+def calculate_episode_score(episode_rewards: list[float],
+                            final_diagnosis: str,
+                            scenario: dict,
+                            referred: bool) -> float:
+    """
+    Single 0-1 score for the full episode. Used by GRPO to compare episodes.
+    """
+    correct = final_diagnosis == scenario["hidden_diagnosis"]
+
+    if not correct:
+        return 0.001
+
+    score = 0.5
+
+    if scenario["requires_referral"] and referred:
+        score += 0.2
+
+    total_steps = len(episode_rewards)
+    max_steps = scenario["critical_window_days"] * 2 + 5
+    efficiency = 1.0 - (total_steps / max_steps)
+    score += 0.3 * efficiency
+
+    return max(0.001, min(0.999, score))
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 #  Smoke tests — uses the malaria scenario (case_07, easy) from scenario2.py
 # ─────────────────────────────────────────────────────────────────────────────
