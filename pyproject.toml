@@ -1,6 +1,6 @@
 [build-system]
 requires = ["setuptools>=68", "wheel"]
-build-backend = "setuptools.backends.legacy:build"
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "rural-doc-env"
@@ -12,11 +12,17 @@ license = { text = "MIT" }
 
 dependencies = [
     "pydantic>=2.7.0",
+    "pydantic-settings>=2.0",
     "fastapi>=0.111.0",
     "uvicorn[standard]>=0.29.0",
     "websockets>=12.0",
     "openai>=1.30.0",
+    "openenv-core>=0.2.0",
+    "psycopg[binary,pool]>=3.2",
 ]
+
+[project.scripts]
+ruraldoc-server = "backend.app:main"
 
 [project.optional-dependencies]
 dev = [
@@ -26,7 +32,7 @@ dev = [
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["rural_doc_env*"]
+include = ["backend*", "db*", "env*", "models*", "rag*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

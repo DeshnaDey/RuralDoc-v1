@@ -1,0 +1,132 @@
+{
+  "meta": {
+    "timestamp": "2026-04-24T06:02:24.446907+00:00",
+    "n_episodes": 5,
+    "agent_version": "random_v1",
+    "seed": 7,
+    "total_elapsed_ms": 2771.03,
+    "throughput_eps_per_sec": 1.804
+  },
+  "outcomes": {
+    "correct": 2,
+    "referred_correct": 2,
+    "timeout": 1
+  },
+  "persist_success_rate": 1.0,
+  "rewards": {
+    "mean": 2.3629,
+    "min": 1.0,
+    "max": 2.8
+  },
+  "step_latency_ms": {
+    "n": 15,
+    "mean": 2.524,
+    "median": 2.08,
+    "p95": 6.031,
+    "p99": 6.906,
+    "max": 6.906
+  },
+  "rollout_latency_ms": {
+    "n": 5,
+    "mean": 7.6,
+    "median": 9.147,
+    "p95": 13.02,
+    "p99": 13.02,
+    "max": 13.02
+  },
+  "persist_latency_ms": {
+    "n": 5,
+    "mean": 544.91,
+    "median": 462.01,
+    "p95": 703.064,
+    "p99": 703.064,
+    "max": 703.064
+  },
+  "episodes": [
+    {
+      "scenario_id": "case_02",
+      "hidden_diagnosis": "type_2_diabetes",
+      "steps": 3,
+      "outcome": "correct",
+      "referred": false,
+      "final_diagnosis": "type_2_diabetes",
+      "cumulative_reward": 2.8,
+      "persisted": true,
+      "rollout_ms": 13.02,
+      "persist_ms": 703.064,
+      "step_latencies_ms": [
+        6.9061,
+        3.9849,
+        2.08
+      ]
+    },
+    {
+      "scenario_id": "case_02",
+      "hidden_diagnosis": "type_2_diabetes",
+      "steps": 3,
+      "outcome": "correct",
+      "referred": false,
+      "final_diagnosis": "type_2_diabetes",
+      "cumulative_reward": 2.8,
+      "persisted": true,
+      "rollout_ms": 9.147,
+      "persist_ms": 437.528,
+      "step_latencies_ms": [
+        3.6679,
+        3.6187,
+        1.8367
+      ]
+    },
+    {
+      "scenario_id": "case_14",
+      "hidden_diagnosis": "lymphatic_filariasis",
+      "steps": 3,
+      "outcome": "referred_correct",
+      "referred": true,
+      "final_diagnosis": "lymphatic_filariasis",
+      "cumulative_reward": 2.5,
+      "persisted": true,
+      "rollout_ms": 12.039,
+      "persist_ms": 462.01,
+      "step_latencies_ms": [
+        3.5764,
+        6.0312,
+        2.395
+      ]
+    },
+    {
+      "scenario_id": "case_18",
+      "hidden_diagnosis": "kala_azar",
+      "steps": 4,
+      "outcome": "referred_correct",
+      "referred": true,
+      "final_diagnosis": "kala_azar",
+      "cumulative_reward": 2.7143,
+      "persisted": true,
+      "rollout_ms": 3.388,
+      "persist_ms": 429.413,
+      "step_latencies_ms": [
+        0.5895,
+        1.0496,
+        1.0533,
+        0.677
+      ]
+    },
+    {
+      "scenario_id": "case_19",
+      "hidden_diagnosis": "severe_pneumonia_under_5",
+      "steps": 2,
+      "outcome": "timeout",
+      "referred": true,
+      "final_diagnosis": null,
+      "cumulative_reward": 1.0,
+      "persisted": true,
+      "rollout_ms": 0.405,
+      "persist_ms": 692.533,
+      "step_latencies_ms": [
+        0.1532,
+        0.239
+      ]
+    }
+  ]
+}

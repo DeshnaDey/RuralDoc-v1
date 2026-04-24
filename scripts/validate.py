@@ -1,7 +1,7 @@
 """
 scripts/validate.py — Pre-submission validation runner.
 
-Delegates to rural_doc_env.validate for all checks.
+Delegates to env.validate for all checks.
 
 Usage (from repo root):
     python scripts/validate.py
@@ -9,10 +9,12 @@ Usage (from repo root):
 
 import subprocess
 import sys
+import os
 
 if __name__ == "__main__":
+    repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     result = subprocess.run(
-        [sys.executable, "-m", "rural_doc_env.validate"],
-        cwd=__file__.replace("/scripts/validate.py", ""),
+        [sys.executable, "-m", "env.validate"],
+        cwd=repo_root,
     )
     sys.exit(result.returncode)
