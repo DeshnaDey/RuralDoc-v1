@@ -1,21 +1,21 @@
 """
 rag — Retrieval-Augmented Generation layer for RuralDocEnv.
 
-Staging area for the production RAG engine. Everything exported here is a
-Protocol or stub so the rest of the code can type-hint / wire against it
-without depending on a concrete implementation.
+Production flow:
+    from rag import PgRAGEngine
+    from rag.embeddings import Embedder
+    from db.pool import get_pool
 
-Expected flow once implemented:
-    env = MedicalDiagnosisEnvironment(rag_engine=MyRagEngine(...))
-    obs = env.reset(scenario=tb)
-    result = env.step(action)
-    # env.step() calls rag_engine.retrieve() and attaches RAGContext
-    # to result.info["rag"]; inference.py renders it into the next prompt.
+    pool   = await get_pool()
+    engine = PgRAGEngine(pool=pool, embedder=Embedder())
+    ctx    = await engine.retrieve("fever night sweats weight loss Delhi 34M", k=3)
+    # ctx.snippets → list of formatted clinical guideline strings
 """
 
 from rag.engine import RAGEngine, RAGContext, NullRAGEngine
 from rag.retriever import Retriever
 from rag.embeddings import Embedder
+from rag.engine_pg import PgRAGEngine
 
 __all__ = [
     "RAGEngine",
@@ -23,4 +23,5 @@ __all__ = [
     "NullRAGEngine",
     "Retriever",
     "Embedder",
+    "PgRAGEngine",
 ]
