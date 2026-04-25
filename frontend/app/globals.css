@@ -5,34 +5,29 @@
   --color-foreground: var(--foreground);
   --color-primary: var(--primary);
   --color-primary-dark: var(--primary-dark);
-  --color-accent: var(--accent);
-  --color-accent-dark: var(--accent-dark);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
 :root {
-  --background: #f8fafc; /* slate-50 */
-  --foreground: #0f172a; /* slate-900 */
-  --primary: #0284c7; /* sky-600 */
-  --primary-dark: #0369a1; /* sky-700 */
-  --accent: #0d9488; /* teal-600 */
-  --accent-dark: #0f766e; /* teal-700 */
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0f172a; /* slate-900 */
-    --foreground: #f8fafc; /* slate-50 */
-    --primary: #38bdf8; /* sky-400 */
-    --primary-dark: #0284c7; /* sky-600 */
-    --accent: #2dd4bf; /* teal-400 */
-    --accent-dark: #0d9488; /* teal-600 */
-  }
+  --background: #ffffff;
+  --foreground: #0f2b2a;
+  --primary: #4fa8a0;
+  --primary-dark: #3d8880;
+  --sidebar-bg: #5aada8;
 }
 
 body {
   background-color: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), sans-serif;
+}
+
+/* Graph-paper grid applied to the main content area */
+.grid-bg {
+  background-color: #ffffff;
+  background-image:
+    linear-gradient(rgba(90, 173, 168, 0.15) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(90, 173, 168, 0.15) 1px, transparent 1px);
+  background-size: 38px 38px;
 }
