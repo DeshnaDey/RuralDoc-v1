@@ -5,9 +5,10 @@ import { Patient } from '@/lib/api';
 
 interface AppointmentListProps {
   appointments: Patient[];
+  onPatientClick?: (patient: Patient) => void;
 }
 
-export default function AppointmentList({ appointments }: AppointmentListProps) {
+export default function AppointmentList({ appointments, onPatientClick }: AppointmentListProps) {
   const router = useRouter();
 
   const getStatusBadge = (status: Patient['status']) => {
@@ -68,6 +69,7 @@ export default function AppointmentList({ appointments }: AppointmentListProps) 
                   key={patient.id}
                   className="group cursor-pointer transition-colors"
                   style={{ borderBottom: '1px solid rgba(90, 173, 168, 0.15)' }}
+                  onClick={() => onPatientClick?.(patient)}
                   onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(90,173,168,0.1)')}
                   onMouseLeave={e => (e.currentTarget.style.backgroundColor = '')}
                 >

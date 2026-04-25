@@ -15,7 +15,7 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-64 hidden md:flex flex-col" style={{ backgroundColor: '#5aada8' }}>
+    <aside className="w-64 hidden md:flex flex-col" style={{ backgroundColor: 'rgba(90, 173, 168, 0.82)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
       {/* Brand */}
       <div className="h-16 flex items-center px-6">
         <div className="flex items-center gap-2.5 text-white">

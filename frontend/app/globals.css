@@ -25,9 +25,9 @@ body {
 
 /* Graph-paper grid applied to the main content area */
 .grid-bg {
-  background-color: #ffffff;
+  background-color: #f0fafa;
   background-image:
-    linear-gradient(rgba(90, 173, 168, 0.15) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(90, 173, 168, 0.15) 1px, transparent 1px);
-  background-size: 38px 38px;
+    linear-gradient(rgba(90, 173, 168, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(90, 173, 168, 0.12) 1px, transparent 1px);
+  background-size: 32px 32px;
 }
