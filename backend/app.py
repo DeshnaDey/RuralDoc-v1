@@ -18,6 +18,11 @@ Docker:
 
 from __future__ import annotations
 
+import sys
+if sys.platform == "win32":
+    import asyncio as _asyncio
+    _asyncio.set_event_loop_policy(_asyncio.WindowsSelectorEventLoopPolicy())
+
 import asyncio
 import json
 import logging
@@ -28,6 +33,9 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from db.pool import close_pool, get_pool
 from env.environment import MedicalDiagnosisEnvironment
 from env.scenarios import scenarios_v2
+from nlp.vocab import SymptomVocab
+from rag.embeddings import Embedder
+from backend.routes.extract import router as extract_router
 
 log = logging.getLogger("ruraldoc.server")
 
@@ -39,7 +47,12 @@ _semaphore = asyncio.Semaphore(MAX_CONCURRENT_ENVS)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Warm the pool at startup so the first WS connection isn't slow.
-    await get_pool()
+    pool = await get_pool()
+    app.state.pool = pool
+    app.state.embedder = Embedder()
+    app.state.vocab = SymptomVocab()
+    await app.state.vocab.load(pool, version_id=1)
+    app.state.version_id = 1
     log.info("DB pool opened.")
     try:
         yield
@@ -54,6 +67,7 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan,
 )
+app.include_router(extract_router)
 
 
 @app.get("/")

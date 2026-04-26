@@ -83,7 +83,7 @@ def _scenario_text(sc: dict) -> str:
     age = demo.get("age", "")
     gender = demo.get("gender", "")
     loc = demo.get("location", "")
-    day1 = (sc.get("daily_progression") or {}).get(1) or {}
+    day1 = (sc.get("daily_progression") or {}).get("1-7") or {}
     sym = day1.get("symptoms", [])
     parts = [
         sc.get("hidden_diagnosis", ""),

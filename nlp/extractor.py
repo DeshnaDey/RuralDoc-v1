@@ -125,10 +125,10 @@ class SymptomExtractor:
     """
 
     def __init__(self, model: str | None = None) -> None:
-        self.model = model or os.environ.get("MODEL_NAME", "gpt-4o-mini")
+        self.model = model or os.environ.get("MODEL_NAME", "meta-llama/Llama-3.1-8B-Instruct")
         self._client = AsyncOpenAI(
             api_key=os.environ.get("HF_TOKEN") or os.environ.get("OPENAI_API_KEY", ""),
-            base_url=os.environ.get("API_BASE_URL", "https://api.openai.com/v1"),
+            base_url=os.environ.get("API_BASE_URL", "https://api-inference.huggingface.co/v1"),
         )
 
     async def extract(self, text: str) -> ParsedComplaint:
@@ -150,7 +150,6 @@ class SymptomExtractor:
         try:
             resp = await self._client.chat.completions.create(
                 model=self.model,
-                response_format={"type": "json_object"},
                 messages=[
                     {"role": "system", "content": SYSTEM_PROMPT},
                     {"role": "user", "content": text.strip()},
