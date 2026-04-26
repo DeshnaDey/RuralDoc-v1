@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 52" fill="none">
+  <!-- Top circle lobe -->
+  <circle cx="28" cy="9.5" r="6.8" stroke="#1a8c7f" stroke-width="3.6"/>
+
+  <!-- Left C-lobe -->
+  <path
+    d="M 26.2 16.8
+       C 19 15.2, 5.5 19.5, 5 28.5
+       C 4.5 37.5, 16 42, 26.2 39.5"
+    stroke="#1a8c7f" stroke-width="3.6" stroke-linecap="round"
+  />
+
+  <!-- Right C-lobe (mirror) -->
+  <path
+    d="M 29.8 16.8
+       C 37 15.2, 50.5 19.5, 51 28.5
+       C 51.5 37.5, 40 42, 29.8 39.5"
+    stroke="#1a8c7f" stroke-width="3.6" stroke-linecap="round"
+  />
+
+  <!-- Bottom teardrop lobe -->
+  <path
+    d="M 24 37.5
+       C 15.5 40.5, 17.5 53.5, 28 53.5
+       C 38.5 53.5, 40.5 40.5, 32 37.5"
+    stroke="#1a8c7f" stroke-width="3.6" stroke-linecap="round"
+  />
+</svg>

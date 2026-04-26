@@ -1,3 +1,4 @@
+
 """
 inference.py — LLM agent loop for MedicalDiagnosisEnvironment.
 
@@ -16,12 +17,15 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 import argparse
 import os
-import openai
+import httpx
+
+print("DEBUG ENV MODEL_NAME:", os.environ.get("MODEL_NAME"))
+print("DEBUG ENV API_BASE_URL:", os.environ.get("API_BASE_URL"))
 
 sys.path.insert(0, os.path.dirname(__file__))
 
-API_BASE_URL = os.environ.get("API_BASE_URL", "https://api.openai.com/v1")
-MODEL_NAME   = os.environ.get("MODEL_NAME", "gpt-4o-mini")
+API_BASE_URL = "https://api-inference.huggingface.co/v1"
+MODEL_NAME = "meta-llama/Llama-3.1-8B-Instruct"
 
 from server.environment import MedicalDiagnosisEnvironment
 from models import Observation
@@ -245,18 +249,31 @@ def render_observation(obs: Observation, test_costs: dict) -> str:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def call_llm(system_prompt: str, conversation: list[dict]) -> str:
-    """Send the conversation to the configured OpenAI-compatible endpoint."""
     hf_token = os.environ.get("HF_TOKEN")
     if not hf_token:
-        raise ValueError("HF_TOKEN environment variable is not set.")
-    client = openai.OpenAI(base_url=API_BASE_URL, api_key=hf_token)
+        raise ValueError("HF_TOKEN not set")
+
+    url = "https://api-inference.huggingface.co/v1/chat/completions"
+
+    headers = {
+        "Authorization": f"Bearer {hf_token}",
+        "Content-Type": "application/json",
+    }
+
     messages = [{"role": "system", "content": system_prompt}] + conversation
-    response = client.chat.completions.create(
-        model=MODEL_NAME,
-        max_tokens=256,
-        messages=messages,
-    )
-    return response.choices[0].message.content
+
+    payload = {
+        "model": "meta-llama/Llama-3.1-8B-Instruct",
+        "messages": messages,
+        "max_tokens": 256,
+    }
+
+    with httpx.Client(timeout=60) as client:
+        response = client.post(url, headers=headers, json=payload)
+        response.raise_for_status()
+        data = response.json()
+
+    return data["choices"][0]["message"]["content"]
 
 
 # ─────────────────────────────────────────────────────────────────────────────

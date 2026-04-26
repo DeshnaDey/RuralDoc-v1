@@ -1,6 +1,6 @@
 [build-system]
 requires = ["setuptools>=68", "wheel"]
-build-backend = "setuptools.backends.legacy:build"
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "rural-doc-env"
@@ -26,6 +26,13 @@ server = "server.app:main"
 dev = [
     "pytest>=8.0",
     "httpx>=0.27",
+]
+grpo = [
+    "torch>=2.2.0",
+    "transformers>=4.40.0",
+    "trl>=0.9.0",
+    "accelerate>=0.30.0",
+    "matplotlib>=3.7.0",
 ]
 
 [tool.setuptools.packages.find]

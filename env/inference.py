@@ -39,8 +39,7 @@ if hasattr(sys.stdout, "reconfigure"):
 import argparse
 import logging
 import os
-
-import openai
+import httpx
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
@@ -50,8 +49,8 @@ from env.scenarios import scenarios_v2
 
 log = logging.getLogger("ruraldoc.inference")
 
-API_BASE_URL = os.environ.get("API_BASE_URL", "https://api.openai.com/v1")
-MODEL_NAME   = os.environ.get("MODEL_NAME",   "gpt-4o-mini")
+API_BASE_URL = "https://api-inference.huggingface.co/v1"
+MODEL_NAME   = "meta-llama/Llama-3.1-8B-Instruct"
 RAG_K        = int(os.environ.get("RAG_K", "3"))
 
 
@@ -190,13 +189,44 @@ def _build_rag_query(obs: Observation) -> str:
 def call_llm(system_prompt: str, conversation: list[dict]) -> str:
     hf_token = os.environ.get("HF_TOKEN")
     if not hf_token:
-        raise ValueError("HF_TOKEN environment variable is not set.")
-    client = openai.OpenAI(base_url=API_BASE_URL, api_key=hf_token)
-    messages = [{"role": "system", "content": system_prompt}] + conversation
-    response = client.chat.completions.create(
-        model=MODEL_NAME, max_tokens=256, messages=messages,
-    )
-    return response.choices[0].message.content
+        raise ValueError("HF_TOKEN not set")
+
+    model = "meta-llama/Llama-3.1-8B-Instruct"
+    url = furl = "https://api-inference.huggingface.co/models/meta-llama/Llama-3.1-8B-Instruct"
+
+    headers = {
+        "Authorization": f"Bearer {hf_token}",
+        "Content-Type": "application/json",
+    }
+
+    # Convert chat → single prompt (HF expects plain text)
+    prompt = system_prompt + "\n\n"
+
+    for msg in conversation:
+        role = msg["role"]
+        content = msg["content"]
+
+        if role == "user":
+            prompt += f"User: {content}\n"
+        elif role == "assistant":
+            prompt += f"Assistant: {content}\n"
+
+    prompt += "Assistant:"
+
+    payload = {
+        "inputs": prompt,
+        "parameters": {
+            "max_new_tokens": 256,
+            "temperature": 0.7,
+        }
+    }
+
+    with httpx.Client(timeout=60) as client:
+        response = client.post(url, headers=headers, json=payload)
+        response.raise_for_status()
+        data = response.json()
+
+    return data[0]["generated_text"].split("Assistant:")[-1].strip()
 
 
 def parse_action(raw_text: str) -> dict | None:
