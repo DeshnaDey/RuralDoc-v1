@@ -24,8 +24,9 @@ print("DEBUG ENV API_BASE_URL:", os.environ.get("API_BASE_URL"))
 
 sys.path.insert(0, os.path.dirname(__file__))
 
-API_BASE_URL = "https://api-inference.huggingface.co/v1"
-MODEL_NAME = "meta-llama/Llama-3.1-8B-Instruct"
+# Free defaults — local Ollama. Override via .env.
+API_BASE_URL = os.environ.get("API_BASE_URL", "http://localhost:11434/v1").rstrip("/")
+MODEL_NAME = os.environ.get("MODEL_NAME", "llama3.1:8b-instruct-q4_K_M")
 
 from server.environment import MedicalDiagnosisEnvironment
 from models import Observation
@@ -249,31 +250,39 @@ def render_observation(obs: Observation, test_costs: dict) -> str:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def call_llm(system_prompt: str, conversation: list[dict]) -> str:
-    hf_token = os.environ.get("HF_TOKEN")
-    if not hf_token:
-        raise ValueError("HF_TOKEN not set")
+    """OpenAI-compatible chat-completions call — defaults to free local Ollama.
+    HF_TOKEN is only used if API_BASE_URL points at HuggingFace."""
+    is_hf = "huggingface.co" in API_BASE_URL
+    is_groq = "groq.com" in API_BASE_URL
+    if is_hf:
+        token = os.environ.get("HF_TOKEN", "")
+        if not token:
+            raise ValueError(
+                "API_BASE_URL points at HuggingFace but HF_TOKEN is not set. "
+                "Unset API_BASE_URL to use local Ollama (free)."
+            )
+    elif is_groq:
+        token = os.environ.get("GROQ_API_KEY", "")
+    else:
+        token = os.environ.get("OLLAMA_API_KEY", "") or os.environ.get("API_KEY", "")
 
-    url = "https://api-inference.huggingface.co/v1/chat/completions"
-
-    headers = {
-        "Authorization": f"Bearer {hf_token}",
-        "Content-Type": "application/json",
-    }
+    headers = {"Content-Type": "application/json"}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
 
     messages = [{"role": "system", "content": system_prompt}] + conversation
-
     payload = {
-        "model": "meta-llama/Llama-3.1-8B-Instruct",
+        "model": MODEL_NAME,
         "messages": messages,
         "max_tokens": 256,
     }
 
-    with httpx.Client(timeout=60) as client:
-        response = client.post(url, headers=headers, json=payload)
+    with httpx.Client(timeout=90) as client:
+        response = client.post(f"{API_BASE_URL}/chat/completions", headers=headers, json=payload)
         response.raise_for_status()
         data = response.json()
 
-    return data["choices"][0]["message"]["content"]
+    return (data["choices"][0]["message"]["content"] or "").strip()
 
 
 # ─────────────────────────────────────────────────────────────────────────────

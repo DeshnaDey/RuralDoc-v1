@@ -12,9 +12,13 @@ RAG layer:
     "CLINICAL CONTEXT". Set RAG_K (default 3) or DISABLE_RAG=1 to control.
 
 Environment variables:
-    HF_TOKEN        — API key / HuggingFace token (required)
-    API_BASE_URL    — OpenAI-compatible base URL (default: https://api.openai.com/v1)
-    MODEL_NAME      — model identifier (default: gpt-4o-mini)
+    API_BASE_URL    — OpenAI-compatible base URL.
+                      Default: http://localhost:11434/v1 (local Ollama, free)
+                      Other free options: Groq (https://api.groq.com/openai/v1)
+    MODEL_NAME      — model identifier (default: llama3.1:8b-instruct-q4_K_M)
+    OLLAMA_API_KEY  — optional bearer token (most local Ollama setups don't need it)
+    HF_TOKEN        — ONLY required if you point API_BASE_URL at HuggingFace.
+                      Reserve this for the GRPO training step.
     SUPABASE_DB_URL — Postgres URI (enables RAG + episode persistence)
     RAG_K           — disease hits per RAG call (default: 3)
     DISABLE_RAG     — set to 1 to disable RAG
@@ -49,8 +53,10 @@ from env.scenarios import scenarios_v2
 
 log = logging.getLogger("ruraldoc.inference")
 
-API_BASE_URL = "https://api-inference.huggingface.co/v1"
-MODEL_NAME   = "meta-llama/Llama-3.1-8B-Instruct"
+# Free defaults — local Ollama. Override via .env to point at any
+# OpenAI-compatible endpoint (Groq, vllm, hosted TEI, etc.).
+API_BASE_URL = os.environ.get("API_BASE_URL", "http://localhost:11434/v1").rstrip("/")
+MODEL_NAME   = os.environ.get("MODEL_NAME", "llama3.1:8b-instruct-q4_K_M")
 RAG_K        = int(os.environ.get("RAG_K", "3"))
 
 
@@ -187,46 +193,57 @@ def _build_rag_query(obs: Observation) -> str:
 
 
 def call_llm(system_prompt: str, conversation: list[dict]) -> str:
-    hf_token = os.environ.get("HF_TOKEN")
-    if not hf_token:
-        raise ValueError("HF_TOKEN not set")
+    """
+    Call any OpenAI-compatible /v1/chat/completions endpoint.
 
-    model = "meta-llama/Llama-3.1-8B-Instruct"
-    url = furl = "https://api-inference.huggingface.co/models/meta-llama/Llama-3.1-8B-Instruct"
+    Default target is local Ollama (free, no token). Override via env vars:
+      - API_BASE_URL  → e.g. http://localhost:11434/v1, https://api.groq.com/openai/v1
+      - MODEL_NAME    → e.g. llama3.1:8b-instruct-q4_K_M, llama-3.1-8b-instant
+      - OLLAMA_API_KEY / GROQ_API_KEY / HF_TOKEN → bearer token (whichever is set)
 
-    headers = {
-        "Authorization": f"Bearer {hf_token}",
-        "Content-Type": "application/json",
-    }
+    HF_TOKEN is only consumed when API_BASE_URL points at HuggingFace; for
+    everything else it's ignored, leaving the token free for training.
+    """
+    # Pick the right token for the configured endpoint.
+    is_hf = "huggingface.co" in API_BASE_URL
+    is_groq = "groq.com" in API_BASE_URL
+    if is_hf:
+        token = os.environ.get("HF_TOKEN", "")
+        if not token:
+            raise ValueError(
+                "API_BASE_URL points at HuggingFace but HF_TOKEN is not set. "
+                "For free local inference, unset API_BASE_URL (defaults to Ollama)."
+            )
+    elif is_groq:
+        token = os.environ.get("GROQ_API_KEY", "")
+    else:
+        # Local Ollama / vllm / etc. — usually no auth.
+        token = os.environ.get("OLLAMA_API_KEY", "") or os.environ.get("API_KEY", "")
 
-    # Convert chat → single prompt (HF expects plain text)
-    prompt = system_prompt + "\n\n"
+    headers = {"Content-Type": "application/json"}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
 
-    for msg in conversation:
-        role = msg["role"]
-        content = msg["content"]
-
-        if role == "user":
-            prompt += f"User: {content}\n"
-        elif role == "assistant":
-            prompt += f"Assistant: {content}\n"
-
-    prompt += "Assistant:"
-
+    # Standard OpenAI chat-completions payload.
+    messages = [{"role": "system", "content": system_prompt}, *conversation]
     payload = {
-        "inputs": prompt,
-        "parameters": {
-            "max_new_tokens": 256,
-            "temperature": 0.7,
-        }
+        "model": MODEL_NAME,
+        "messages": messages,
+        "temperature": 0.7,
+        "max_tokens": 256,
     }
 
-    with httpx.Client(timeout=60) as client:
+    url = f"{API_BASE_URL}/chat/completions"
+    with httpx.Client(timeout=90) as client:
         response = client.post(url, headers=headers, json=payload)
         response.raise_for_status()
         data = response.json()
 
-    return data[0]["generated_text"].split("Assistant:")[-1].strip()
+    # OpenAI-compatible shape — Ollama, Groq, vllm all return the same.
+    try:
+        return (data["choices"][0]["message"]["content"] or "").strip()
+    except (KeyError, IndexError, TypeError) as exc:
+        raise RuntimeError(f"Unexpected LLM response shape: {exc}; body={str(data)[:300]}") from exc
 
 
 def parse_action(raw_text: str) -> dict | None:
