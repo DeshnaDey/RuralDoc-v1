@@ -29,6 +29,12 @@ Run from project root:
 
 from __future__ import annotations
 
+import sys
+if sys.platform == "win32":
+    import asyncio
+    import selectors
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
 import argparse
 import asyncio
 import logging
@@ -77,7 +83,7 @@ def _scenario_text(sc: dict) -> str:
     age = demo.get("age", "")
     gender = demo.get("gender", "")
     loc = demo.get("location", "")
-    day1 = (sc.get("daily_progression") or {}).get(1) or {}
+    day1 = (sc.get("daily_progression") or {}).get("1-7") or {}
     sym = day1.get("symptoms", [])
     parts = [
         sc.get("hidden_diagnosis", ""),
