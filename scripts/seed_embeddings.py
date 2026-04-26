@@ -29,6 +29,12 @@ Run from project root:
 
 from __future__ import annotations
 
+import sys
+if sys.platform == "win32":
+    import asyncio
+    import selectors
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
 import argparse
 import asyncio
 import logging
