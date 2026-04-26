@@ -49,8 +49,8 @@ log = logging.getLogger("ruraldoc.rag.embeddings")
 
 # Default embedding model — override via EMBED_MODEL env var.
 # bge-large-en-v1.5: 1024 dims, matches the vector(1024) columns post-migration.
-DEFAULT_EMBED_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
-DEFAULT_DIM = 384
+DEFAULT_EMBED_MODEL = "BAAI/bge-large-en-v1.5"
+DEFAULT_DIM = 1024
 
 # Default base URL: HF serverless inference. To switch to a TEI dedicated
 # Inference Endpoint, set EMBED_API_BASE_URL=https://<your-endpoint>.hf.space/v1.
@@ -128,7 +128,7 @@ class Embedder:
             self._url = f"{base_url}/embeddings"
         else:
             self._mode = "feature_extraction"
-            self._url = f"{base_url}/pipeline/feature-extraction/{self._model}"
+            self._url = f"{base_url}/models/{self._model}"
 
         log.info(
             "Embedder configured: mode=%s url=%s model=%s",
